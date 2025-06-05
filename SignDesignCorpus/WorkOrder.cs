@@ -69,7 +69,9 @@ namespace SignDesignCorpus
             _strQuery.Append("DIST_CNTCT_APRV_ID, ");
             _strQuery.Append("WRK_ORDR_DIST_APRV_DT, ");
             _strQuery.Append("WRK_ORDR_SIGN_RCVD_DT, ");
-            _strQuery.Append("WRK_ORDR_SIGN_INST_DT");
+            _strQuery.Append("WRK_ORDR_SIGN_INST_DT, ");
+            _strQuery.Append("WRK_ORDR_HOLD, ");
+            _strQuery.Append("WRK_ORDR_STAT");
             _strQuery.Append(") OUTPUT inserted.WRK_ORDR_ID ");
             _strQuery.Append("VALUES (");
             _strQuery.Append("@prm_number, ");
@@ -93,7 +95,9 @@ namespace SignDesignCorpus
             _strQuery.Append("@prm_dist_cntct_aprv, ");
             _strQuery.Append("@prm_work_order_dist_aprv_date, ");
             _strQuery.Append("@prm_work_order_sign_rcvd_date, ");
-            _strQuery.Append("@prm_work_order_sign_inst_date");
+            _strQuery.Append("@prm_work_order_sign_inst_date, ");
+            _strQuery.Append("@prm_work_order_hold, ");
+            _strQuery.Append("@prm_work_order_status");
             _strQuery.Append(")");
 
             _queryParams.Clear();
@@ -119,6 +123,9 @@ namespace SignDesignCorpus
             _queryParams.Add("prm_work_order_dist_aprv_date", entity.ApprovedByDistrictDate is null ? DBNull.Value : entity.ApprovedByDistrictDate);
             _queryParams.Add("prm_work_order_sign_rcvd_date", entity.SignReceivedDate is null ? DBNull.Value : entity.SignReceivedDate);
             _queryParams.Add("prm_work_order_sign_inst_date", entity.SignInstalledDate is null ? DBNull.Value : entity.SignInstalledDate);
+            _queryParams.Add("prm_work_order_hold", entity.IsHold);
+            _queryParams.Add("prm_work_order_status", entity.Status is null ? DBNull.Value : entity.Status);
+
 
             int sequenceValue = (int)_unitOfWork.ExecuteScalar(_strQuery.ToString(), _queryParams);
 
@@ -236,37 +243,32 @@ namespace SignDesignCorpus
             _strQuery.Append("ELSE WRK_ORDR_DIST_APRV_DT ");
             _strQuery.Append("END AS StatusDate, ");
 
+            _strQuery.Append("WRK_ORDR_HOLD AS IsHold, ");
+            _strQuery.Append("WRK_ORDR_STAT AS Status ");
+
+            //// Determine the status based on approval and dates values
             //_strQuery.Append("CASE ");
             //_strQuery.Append("WHEN WRK_ORDR_SIGN_INST_DT IS NOT NULL THEN 'INSTALLED' ");
             //_strQuery.Append("WHEN WRK_ORDR_SIGN_RCVD_DT IS NOT NULL THEN 'RECEIVED' ");
+
+            //// If there is NOT a sign that requires area engineer approval
+            //_strQuery.Append("WHEN (SELECT COUNT(SIGN_NM) AS result FROM WRK_ORDR_ITEM WHERE WRK_ORDR_ITEM.WRK_ORDR_ID = WRK_ORDR.WRK_ORDR_ID AND (SIGN_NM = 'W12-2' OR SIGN_NM = 'W12-2A')) = 0 THEN ");
+            //_strQuery.Append("CASE ");
             //_strQuery.Append("WHEN MAINT_SECT_SUPV_APRV_ID IS NULL AND DIST_CNTCT_APRV_ID IS NULL THEN 'CREATED' ");
             //_strQuery.Append("WHEN DIST_CNTCT_APRV_ID IS NULL THEN 'REQUESTED' ");
             //_strQuery.Append("ELSE 'APPROVED' ");
+            //_strQuery.Append("END ");
+
+            //// If there IS a sign that requires area engineer approval
+            //_strQuery.Append("WHEN (SELECT COUNT(SIGN_NM) AS result FROM WRK_ORDR_ITEM WHERE WRK_ORDR_ITEM.WRK_ORDR_ID = WRK_ORDR.WRK_ORDR_ID AND (SIGN_NM = 'W12-2' OR SIGN_NM = 'W12-2A')) > 0 THEN ");
+            //_strQuery.Append("CASE ");
+            //_strQuery.Append("WHEN MAINT_SECT_SUPV_APRV_ID IS NULL AND AREA_ENGR_APRV_ID IS NULL AND DIST_CNTCT_APRV_ID IS NULL THEN 'CREATED' ");
+            //_strQuery.Append("WHEN AREA_ENGR_APRV_ID IS NULL AND DIST_CNTCT_APRV_ID IS NULL THEN 'AREA ENGINEER' ");
+            //_strQuery.Append("WHEN DIST_CNTCT_APRV_ID IS NULL THEN 'REQUESTED' ");
+            //_strQuery.Append("ELSE 'APPROVED' ");
+            //_strQuery.Append("END ");
+
             //_strQuery.Append("END AS Status ");
-
-            // Determine the status based on approval and dates values
-            _strQuery.Append("CASE ");
-            _strQuery.Append("WHEN WRK_ORDR_SIGN_INST_DT IS NOT NULL THEN 'INSTALLED' ");
-            _strQuery.Append("WHEN WRK_ORDR_SIGN_RCVD_DT IS NOT NULL THEN 'RECEIVED' ");
-
-            // If there is NOT a sign that requires area engineer approval
-            _strQuery.Append("WHEN (SELECT COUNT(SIGN_NM) AS result FROM WRK_ORDR_ITEM WHERE WRK_ORDR_ITEM.WRK_ORDR_ID = WRK_ORDR.WRK_ORDR_ID AND (SIGN_NM = 'W12-2' OR SIGN_NM = 'W12-2A')) = 0 THEN ");
-            _strQuery.Append("CASE ");
-            _strQuery.Append("WHEN MAINT_SECT_SUPV_APRV_ID IS NULL AND DIST_CNTCT_APRV_ID IS NULL THEN 'CREATED' ");
-            _strQuery.Append("WHEN DIST_CNTCT_APRV_ID IS NULL THEN 'REQUESTED' ");
-            _strQuery.Append("ELSE 'APPROVED' ");
-            _strQuery.Append("END ");
-
-            // If there IS a sign that requires area engineer approval
-            _strQuery.Append("WHEN (SELECT COUNT(SIGN_NM) AS result FROM WRK_ORDR_ITEM WHERE WRK_ORDR_ITEM.WRK_ORDR_ID = WRK_ORDR.WRK_ORDR_ID AND (SIGN_NM = 'W12-2' OR SIGN_NM = 'W12-2A')) > 0 THEN ");
-            _strQuery.Append("CASE ");
-            _strQuery.Append("WHEN MAINT_SECT_SUPV_APRV_ID IS NULL AND AREA_ENGR_APRV_ID IS NULL AND DIST_CNTCT_APRV_ID IS NULL THEN 'CREATED' ");
-            _strQuery.Append("WHEN AREA_ENGR_APRV_ID IS NULL AND DIST_CNTCT_APRV_ID IS NULL THEN 'AREA ENGINEER' ");
-            _strQuery.Append("WHEN DIST_CNTCT_APRV_ID IS NULL THEN 'REQUESTED' ");
-            _strQuery.Append("ELSE 'APPROVED' ");
-            _strQuery.Append("END ");
-
-            _strQuery.Append("END AS Status ");
 
             _strQuery.Append("FROM WRK_ORDR ");
 
@@ -326,6 +328,7 @@ namespace SignDesignCorpus
             _strQuery.Append("WRK_ORDR_DIST_APRV_DT AS ApprovedByDistrictDate, ");
             _strQuery.Append("WRK_ORDR_SIGN_RCVD_DT AS SignReceivedDate, ");
             _strQuery.Append("WRK_ORDR_SIGN_INST_DT AS SignInstalledDate, ");
+            _strQuery.Append("WRK_ORDR_HOLD AS IsHold, ");
             _strQuery.Append("Items.WRK_ORDR_ITEM_ID AS ItemId, ");
             //_strQuery.Append("NIGP_ID AS NIGPId, ");
             _strQuery.Append("NIGP AS NIGP, ");
@@ -397,7 +400,10 @@ namespace SignDesignCorpus
             _strQuery.Append("DIST_CNTCT_APRV_ID = @prm_dist_cntct_aprv, ");
             _strQuery.Append("WRK_ORDR_DIST_APRV_DT = @prm_work_order_dist_aprv_date, ");
             _strQuery.Append("WRK_ORDR_SIGN_RCVD_DT = @prm_work_order_sign_rcvd_date, ");
-            _strQuery.Append("WRK_ORDR_SIGN_INST_DT = @prm_work_order_sign_inst_date ");
+            _strQuery.Append("WRK_ORDR_SIGN_INST_DT = @prm_work_order_sign_inst_date, ");
+            _strQuery.Append("WRK_ORDR_HOLD = @prm_work_order_hold, ");
+            _strQuery.Append("WRK_ORDR_STAT = @prm_work_order_status ");
+
             _strQuery.Append("WHERE ");
             _strQuery.Append("WRK_ORDR_ID = @prm_id");
 
@@ -425,6 +431,8 @@ namespace SignDesignCorpus
             _queryParams.Add("prm_work_order_dist_aprv_date", entity.ApprovedByDistrictDate is null ? DBNull.Value : entity.ApprovedByDistrictDate);
             _queryParams.Add("prm_work_order_sign_rcvd_date", entity.SignReceivedDate is null ? DBNull.Value : entity.SignReceivedDate);
             _queryParams.Add("prm_work_order_sign_inst_date", entity.SignInstalledDate is null ? DBNull.Value : entity.SignInstalledDate);
+            _queryParams.Add("prm_work_order_hold", entity.IsHold);
+            _queryParams.Add("prm_work_order_status", entity.Status is null ? DBNull.Value : entity.Status);
 
             _unitOfWork.ExecuteNonQuery(_strQuery.ToString(), _queryParams);
 
