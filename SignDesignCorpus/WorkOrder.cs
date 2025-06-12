@@ -329,6 +329,7 @@ namespace SignDesignCorpus
             _strQuery.Append("WRK_ORDR_SIGN_RCVD_DT AS SignReceivedDate, ");
             _strQuery.Append("WRK_ORDR_SIGN_INST_DT AS SignInstalledDate, ");
             _strQuery.Append("WRK_ORDR_HOLD AS IsHold, ");
+            _strQuery.Append("WRK_ORDR_STAT AS Status, ");
             _strQuery.Append("Items.WRK_ORDR_ITEM_ID AS ItemId, ");
             //_strQuery.Append("NIGP_ID AS NIGPId, ");
             _strQuery.Append("NIGP AS NIGP, ");
