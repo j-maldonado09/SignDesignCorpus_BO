@@ -244,7 +244,13 @@ namespace SignDesignCorpus
             _strQuery.Append("END AS StatusDate, ");
 
             _strQuery.Append("WRK_ORDR_HOLD AS IsHold, ");
-            _strQuery.Append("WRK_ORDR_STAT AS Status ");
+            //_strQuery.Append("WRK_ORDR_STAT AS Status ");
+
+            _strQuery.Append("CASE ");
+            _strQuery.Append("WHEN WRK_ORDR_SIGN_INST_DT IS NOT NULL THEN 'INSTALLED' ");
+            _strQuery.Append("WHEN WRK_ORDR_SIGN_RCVD_DT IS NOT NULL THEN 'RECEIVED' ");
+            _strQuery.Append("ELSE WRK_ORDR_STAT ");
+            _strQuery.Append("END AS Status ");
 
             //// Determine the status based on approval and dates values
             //_strQuery.Append("CASE ");

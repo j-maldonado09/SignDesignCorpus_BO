@@ -16,7 +16,7 @@ namespace SignDesignCorpus.ViewModels
         public int MaterialRequestedById { get; set; }
         public string MaterialRequestedByName { get; set; }
         public string MaterialRequestedByNumber { get; set; }
-        //public bool IsHold { get; set; }
+        public bool IsHold { get; set; }
         public string Status { get; set; }
         public DateTime StatusDate { get; set; }
     }
